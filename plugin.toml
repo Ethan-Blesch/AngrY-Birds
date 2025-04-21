@@ -1,0 +1,13 @@
+[meta]
+plugin_metadata_version = 0
+
+[plugin]
+name = "Angry Birds"
+shortname = "AngryBirds"
+version = "0.0.0"
+description = "A tool for finding arbitrary writes n stuff!"
+long_description = "A tool for finding arbitrary writes n stuff!"
+platforms = ["linux"]
+min_angr_version = "9.0.0.0"
+author = "Ethan Blesch"
+entrypoints = ["plugin.py"]
