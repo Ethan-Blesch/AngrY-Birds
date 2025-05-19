@@ -16,16 +16,20 @@ def disasm(state):
 
 
 def symAddr(state):
+    #Check if the address we're writing to is user-controlled
     if isinstance(state.inspect.mem_write_address, claripy.ast.bv.BV) and state.inspect.mem_write_address.symbolic:
         return True;
     return False;
+    
 
 def symData(state):
+    #Check if what we're writing is user-controlled
     if isinstance(state.inspect.mem_write_expr, claripy.ast.bv.BV) and state.inspect.mem_write_expr.symbolic:
         return True;
     return False;
 
 def shouldTrack(state):
+    #If a memory write's data and address are both not user-controlled, it's probably nothing interesting
     if symAddr(state) or symData(state):
         return True;
     return False;
@@ -35,9 +39,12 @@ def shouldTrack(state):
 
 class MemoryWrite:
     def __init__(self, state):
+
+        #TODO: Properly implement length and size.
+        
         self.startAddr = state.solver.min(state.inspect.mem_write_address);
         self.endAddr = state.solver.max(state.inspect.mem_write_address);
-        self.len = state.solver.eval(state.inspect.mem_write_length);
+        self.size = state.solver.eval(state.inspect.mem_write_length);
         self.symData = symData(state);
         self.rip = state.solver.eval(state.regs.rip);
         self.state = state
@@ -47,7 +54,7 @@ class MemoryWrite:
         print(f"\tMemory details:")
         print(f"\t\tStart: {hex(self.startAddr)}")
         print(f"\t\tEnd:   {hex(self.endAddr)}")
-        print(f"\t\tSize:  {hex(self.len)}")
+        print(f"\t\tSize:  {hex(self.size)}")
         print(f"\t\tSymbolic data: {self.symData}")
         print(f"\tState details:")
         print(self.state.solver.constraints)
@@ -59,13 +66,17 @@ class MemoryWrite:
 
 
 def write_bp(state):
+
+    # Our breakpoint function is mostly just for testing right now, so there's a lot of debug printouts that I have in there for no reason 
     
     if not shouldTrack(state):
         return
-        
+
+    
     write = MemoryWrite(state)
     write.debugPrint()
     disasm(state)
+    
     print(hex(state.solver.eval(state.regs.rsi)))
     print(state.memory.load(state.regs.rip, 8))
 
