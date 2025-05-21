@@ -1,15 +1,9 @@
 import angr
 import claripy
 
-
-#stdin setup is pretty sketch at the moment and probably only works for the short test binary I've been using (if that)
-#TODO: figure out a cleaner way to do symbolic stdin 
 proj = angr.Project("test_program", auto_load_libs = False)
-sym_val = claripy.BVS("SymbolicInput", 8)
-stream = angr.SimFileStream(name="stdin", content=sym_val, has_end=True);
 
-
-
+#Just for debugging purposes
 def disasm(state):
     rip = state.solver.eval(state.regs.rip)
     block = state.project.factory.block(rip)
@@ -29,6 +23,8 @@ def symData(state):
         return True;
     return False;
 
+
+#If write address and write data are both not symbolic, it's probably nothing interesting
 def shouldTrack(state):
     if symAddr(state) or symData(state):
         return True;
@@ -39,6 +35,9 @@ def shouldTrack(state):
 
 class MemoryWrite:
     def __init__(self, state):
+
+        #TODO: fix length calculation
+
         self.startAddr = state.solver.min(state.inspect.mem_write_address);
         self.endAddr = state.solver.max(state.inspect.mem_write_address);
         self.len = state.solver.eval(state.inspect.mem_write_length);
@@ -51,6 +50,7 @@ class MemoryWrite:
 
 
     def __eq__(self, other):
+        #This is mainly for checking duplicates, and might cause problems later, remember to check on this if something starts acting fishy
         if self.startAddr == other.startAddr and self.endAddr == other.endAddr and self.len == other.len and self.symData == other.symData and self.rip == other.rip:
             return True
         return False;
@@ -68,40 +68,39 @@ class MemoryWrite:
 
 
 
-
-
-
-
 def write_bp(state):
     
     if not shouldTrack(state):
         return
-        
+
+
     write = MemoryWrite(state)
+    #TODO: Set up an actual system for logs & debug prints
     write.debugPrint()
     disasm(state)
+    
+    #Tracked memory writes are stored in state globals, and then all put together after the program is explored.
     state.globals["writes"].append(write)
 
 
 def find_writes(proj):
 
-    entry_state = proj.factory.entry_state(stdin=stream)
+    entry_state = proj.factory.entry_state()
     entry_state.inspect.b('mem_write', when=angr.BP_BEFORE, action=write_bp)
 
     entry_state.globals["writes"] = []
     simgr = proj.factory.simgr(entry_state);
 
     simgr.explore()
-    print(simgr)
 
     writes = []
-    for state in simgr.deadended:
-        for write in state.globals["writes"]:
-            if write in writes:
-                print("DUPLICATE");
-            else:
-                writes.append(write)
 
+    for state in simgr.deadended:
+        #TODO: make sure simgr.deadened is actually what we want, and that we're not missing any states that don't end up there
+        for write in state.globals["writes"]:
+            if write not in writes:
+                writes.append(write)
     return writes
 
 
+#print(find_writes(proj))
