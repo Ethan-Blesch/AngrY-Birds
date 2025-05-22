@@ -18,3 +18,13 @@ class AngryBirds(BasePlugin):
     def __init__(self, workspace: Workspace) -> None:
         super().__init__(workspace)
 
+    MENU_BUTTONS = ["Scan memory writes"]
+
+    def handle_clicK_menu(self, idx: int):
+        if idx == 0:
+            pass
+
+    
+
+        
+
