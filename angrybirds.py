@@ -35,15 +35,16 @@ def shouldTrack(state):
 
 class MemoryWrite:
     def __init__(self, state):
-
-        #TODO: fix length calculation
-
-        self.startAddr = state.solver.min(state.inspect.mem_write_address);
-        self.endAddr = state.solver.max(state.inspect.mem_write_address);
+        
+        #There's probably a cute way to do this instead of a fuck ton of instance variables all together
         self.len = state.solver.eval(state.inspect.mem_write_length);
+        self.minAddr = state.solver.min(state.inspect.mem_write_address);
+        self.maxAddr = state.solver.max(state.inspect.mem_write_address);
+        self.maxReach = self.maxAddr + self.len;
         self.symData = symData(state);
         self.rip = state.solver.eval(state.regs.rip);
         self.state = state
+        
     
     def __repr__(self):
         return "<Memory write at RIP = " + hex(self.rip) + ">"
@@ -51,7 +52,7 @@ class MemoryWrite:
 
     def __eq__(self, other):
         #This is mainly for checking duplicates, and might cause problems later, remember to check on this if something starts acting fishy
-        if self.startAddr == other.startAddr and self.endAddr == other.endAddr and self.len == other.len and self.symData == other.symData and self.rip == other.rip:
+        if self.minAddr == other.minAddr and self.maxAddr == other.maxAddr and self.len == other.len and self.symData == other.symData and self.rip == other.rip  and self.len == other.len:
             return True
         return False;
 
@@ -59,8 +60,8 @@ class MemoryWrite:
     def debugPrint(self):
         print(f"MEMORY WRITE AT {hex(self.rip)}:")
         print(f"\tMemory details:")
-        print(f"\t\tStart: {hex(self.startAddr)}")
-        print(f"\t\tEnd:   {hex(self.endAddr)}")
+        print(f"\t\tStart: {hex(self.minAddr)}")
+        print(f"\t\tEnd:   {hex(self.maxAddr)}")
         print(f"\t\tSize:  {hex(self.len)}")
         print(f"\t\tSymbolic data: {self.symData}")
         print(f"\tState details:")
@@ -103,4 +104,4 @@ def find_writes(proj):
     return writes
 
 
-#print(find_writes(proj))
+print(find_writes(proj))
