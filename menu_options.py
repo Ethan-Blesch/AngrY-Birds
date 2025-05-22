@@ -17,8 +17,8 @@ if TYPE_CHECKING:
     from angrmanagement.ui.widgets.qblock import QBlock
     from angrmanagement.ui.workspace import Workspace
 
-
-def newScan():
-  dialog = QDialog()
-  x.setWindowTitle("AngrY Birds - New scan")
-  x.exec()
+class MenuOptions():
+    def newScan():
+        dialog = QDialog()
+        dialog.setWindowTitle("AngrY Birds - New scan")
+        dialog.exec()
