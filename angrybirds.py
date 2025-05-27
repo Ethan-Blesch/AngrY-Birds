@@ -77,8 +77,8 @@ def write_bp(state):
 
     write = MemoryWrite(state)
     #TODO: Set up an actual system for logs & debug prints
-    write.debugPrint()
-    disasm(state)
+    #write.debugPrint()
+    #disasm(state)
     
     #Tracked memory writes are stored in state globals, and then all put together after the program is explored.
     state.globals["writes"].append(write)
@@ -104,4 +104,9 @@ def find_writes(proj):
     return writes
 
 
-print(find_writes(proj))
+
+#This is currently just a test script, and not implemented with the plugin, so we just test stuff out here at the bottom
+writes = find_writes(proj)
+print("Memory writes detected: ")
+for write in writes:
+    print(f"\tRIP {hex(write.rip)}:\t{hex(write.minAddr)} to {hex(write.maxReach)}")
