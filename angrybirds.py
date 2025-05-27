@@ -40,7 +40,8 @@ class MemoryWrite:
         self.len = state.solver.eval(state.inspect.mem_write_length);
         self.minAddr = state.solver.min(state.inspect.mem_write_address);
         self.maxAddr = state.solver.max(state.inspect.mem_write_address);
-        self.maxReach = self.maxAddr + self.len;
+        self.maxReach = min(0xFFFFFFFFFFFFFFFF, self.maxAddr + self.len);
+
         self.symData = symData(state);
         self.rip = state.solver.eval(state.regs.rip);
         self.state = state
@@ -104,9 +105,8 @@ def find_writes(proj):
     return writes
 
 
-
-#This is currently just a test script, and not implemented with the plugin, so we just test stuff out here at the bottom
 writes = find_writes(proj)
+
 print("Memory writes detected: ")
 for write in writes:
     print(f"\tRIP {hex(write.rip)}:\t{hex(write.minAddr)} to {hex(write.maxReach)}")
