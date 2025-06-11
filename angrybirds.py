@@ -1,7 +1,7 @@
 import angr
 import claripy
 
-proj = angr.Project("test_program", auto_load_libs = False)
+
 
 #Just for debugging purposes
 def disasm(state):
@@ -23,6 +23,10 @@ def symData(state):
         return True;
     return False;
 
+def symLen(state):
+    if isinstance(state.inspect.mem_write_length, claripy.ast.bv.BV) and state.inspect.mem_write_length.symbolic:
+        return True;
+    return False;
 
 #If write address and write data are both not symbolic, it's probably nothing interesting
 def shouldTrack(state):
@@ -37,14 +41,23 @@ class MemoryWrite:
     def __init__(self, state):
         
         #There's probably a cute way to do this instead of a fuck ton of instance variables all together
-        self.len = state.solver.eval(state.inspect.mem_write_length);
+
+        self.rip = state.solver.eval(state.regs.rip);
+        self.minLen = state.solver.min(state.inspect.mem_write_length);
+        self.maxLen = state.solver.max(state.inspect.mem_write_length);
         self.minAddr = state.solver.min(state.inspect.mem_write_address);
         self.maxAddr = state.solver.max(state.inspect.mem_write_address);
-        self.maxReach = min(0xFFFFFFFFFFFFFFFF, self.maxAddr + self.len);
+        self.rangeStart = self.minAddr
+        #TODO: This falls apart if the conditions for address and length are dependent, e.g. max length makes max addr impossible
+        self.rangeEnd = min(0xFFFFFFFFFFFFFFFF, self.maxAddr + self.maxLen);
 
         self.symData = symData(state);
-        self.rip = state.solver.eval(state.regs.rip);
+        self.symLen = symLen(state);
+        self.symAddr = symAddr(state);
+
         self.state = state
+
+
         
     
     def __repr__(self):
@@ -53,12 +66,16 @@ class MemoryWrite:
 
     def __eq__(self, other):
         #This is mainly for checking duplicates, and might cause problems later, remember to check on this if something starts acting fishy
-        if self.minAddr == other.minAddr and self.maxAddr == other.maxAddr and self.len == other.len and self.symData == other.symData and self.rip == other.rip  and self.len == other.len:
+        #TODO: Maybe this could be replaced with self.state == other.state?
+        if self.minAddr == other.minAddr and self.maxAddr == other.maxAddr and self.minLen == other.len and self.maxLen == other.maxLen and self.symData == other.symData and self.symLen == other.symLen and self.symAddr == other.symAddr and self.rip == other.rip  and self.len == other.len:
             return True
         return False;
 
 
     def debugPrint(self):
+
+        #TODO: This needs to be updated
+
         print(f"MEMORY WRITE AT {hex(self.rip)}:")
         print(f"\tMemory details:")
         print(f"\t\tStart: {hex(self.minAddr)}")
@@ -105,8 +122,3 @@ def find_writes(proj):
     return writes
 
 
-writes = find_writes(proj)
-
-print("Memory writes detected: ")
-for write in writes:
-    print(f"\tRIP {hex(write.rip)}:\t{hex(write.minAddr)} to {hex(write.maxReach)}")
