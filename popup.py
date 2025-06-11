@@ -11,15 +11,18 @@ from PySide6.QtCore import Qt, QCoreApplication, QMetaObject, QRect
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QComboBox, QDialog, QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QTableWidget
 
+from .angrybirds import *
 
 
 
 class ScanDialog(QDialog):
-    def __init__(self):
+    def __init__(self, project):
         super().__init__()
+        self.project = project
+
         self.setWindowTitle("Basic QDialog")
-        self.setGeometry(100, 100, 300, 100)
-        self.button = QPushButton("Load Data")
+        self.setGeometry(100, 100, 900, 500)
+        self.button = QPushButton("Scan")
         self.button.clicked.connect(self.load_data)
         print("connected button")
         #Create table
@@ -30,7 +33,7 @@ class ScanDialog(QDialog):
         self.table.setRowCount(0)
         print("Initialized table")
         # Layout setup
-        
+        self.table.resizeColumnsToContents()
         left_layout = QVBoxLayout()
         left_layout.addWidget(self.button)
         left_layout.addStretch()
@@ -43,5 +46,8 @@ class ScanDialog(QDialog):
 
 
     def load_data(self):
-        #self.button.setText("Clicked!")
+        
+        writes = find_writes(self.project)
+        print(writes)
+
         pass
