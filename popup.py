@@ -9,45 +9,72 @@
 
 from PySide6.QtCore import Qt, QCoreApplication, QMetaObject, QRect
 from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import QComboBox, QDialog, QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QTableWidget
+from PySide6.QtWidgets import QComboBox, QDialog, QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QTableWidget, QTableWidgetItem
 
 from .angrybirds import *
 
 
 
 class ScanDialog(QDialog):
+
+
+
     def __init__(self, project):
         super().__init__()
-        self.project = project
 
+        #Instance data and widgets
+        self.project = project
+        self.button = QPushButton("Scan")
+        self.table = QTableWidget()
+
+        #Window setup
         self.setWindowTitle("Basic QDialog")
         self.setGeometry(100, 100, 900, 500)
-        self.button = QPushButton("Scan")
+        
+        #Connect button
         self.button.clicked.connect(self.load_data)
-        print("connected button")
-        #Create table
-        self.table = QTableWidget()
-        print("Created table")
+
+        #Initialize table
         self.table.setColumnCount(9)
         self.table.setHorizontalHeaderLabels(["RIP", "Min size", "Max size", "Min addr", "Max addr", "Possible range", "Symbolic data?", "Symbolic addr?", "Symbolic size?"])
         self.table.setRowCount(0)
-        print("Initialized table")
-        # Layout setup
         self.table.resizeColumnsToContents()
+
+        # Initialize left side of window 
         left_layout = QVBoxLayout()
         left_layout.addWidget(self.button)
         left_layout.addStretch()
-        print("Initialized left layout")
+
+        #Initialize main layout
         main_layout = QHBoxLayout()
         main_layout.addLayout(left_layout)
         main_layout.addWidget(self.table)
-        print("Initialized main layout")
+
         self.setLayout(main_layout)
 
+    def populateRow(self, write, rowNum):
+
+
+        self.table.setItem(rowNum, 0, QTableWidgetItem(hex(write.rip)))
+        self.table.setItem(rowNum, 1, QTableWidgetItem(hex(write.minLen)))
+        self.table.setItem(rowNum, 2, QTableWidgetItem(hex(write.maxLen)))
+        self.table.setItem(rowNum, 3, QTableWidgetItem(hex(write.minAddr)))
+        self.table.setItem(rowNum, 4, QTableWidgetItem(hex(write.maxAddr)))
+        self.table.setItem(rowNum, 5, QTableWidgetItem(hex(write.rangeStart) + " to " + hex(write.rangeEnd)))
+
+        def boolToYesNo(x):
+            return "yes" if x else "no"
+
+        self.table.setItem(rowNum, 6, QTableWidgetItem(boolToYesNo(write.symData)))
+        self.table.setItem(rowNum, 7, QTableWidgetItem(boolToYesNo(write.symAddr)))
+        self.table.setItem(rowNum, 8, QTableWidgetItem(boolToYesNo(write.symLen)))
+        self.table.resizeColumnsToContents()
 
     def load_data(self):
-        
+        #TODO: Add proper error handling for self.project == null
         writes = find_writes(self.project)
-        print(writes)
 
-        pass
+        self.table.setRowCount(len(writes))
+
+        for rowNum, write in enumerate(writes):
+            self.populateRow(write, rowNum);
