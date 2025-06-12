@@ -1,5 +1,7 @@
 # angry-birds
-angry-birds is an extension for angr-management which can map out user-writable sections of memory to assist in finding exploit primitives as well as reverse engineering. 
+
+![alt text](https://github.com/Ethan-Blesch/AngrY-Birds/blob/main/images/table.png?raw=true "Logo Title Text 1")
+angry-birds is an extension for angr-management which can map out user-writable sections of memory to help with exploit dev and reverse engineering. 
 
 
 ## Installation
