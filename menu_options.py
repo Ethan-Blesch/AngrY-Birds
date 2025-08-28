@@ -14,13 +14,13 @@ if TYPE_CHECKING:
 
     from angr.sim_manager import SimulationManager
 
-    from angrmanagement.ui.widgets.qblock import QBlock
+    from angrmanagement.ui.widegts.qblock import QBlock
     from angrmanagement.ui.workspace import Workspace
 
 from .popup import ScanDialog
 
 class MenuOptions():
-    def newScan():
-        dialog = ScanDialog()
+    def newScan(project):
+        dialog = ScanDialog(project)
         dialog.setWindowTitle("AngrY Birds - New scan")
         dialog.exec()
